@@ -1,103 +1,64 @@
 'use strict';
 var express = require('express');
-// var fs = require('fs');
 var request = require('request');
 var cheerio = require('cheerio');
 var Firebase = require('firebase');
 var app     = express();
 
-var myRootRef = new Firebase('https://wayang.firebaseio.com/timescineplex2');
+var firebaseRootRef = new Firebase('https://wayang.firebaseio.com/timescineplex2');
 
 app.get('/timesquare', function(req, res){
-
   var url = 'http://timescineplex.com/schedule/';
-
-  request(url, function(error, response, html){
+  request(url, function(error, response, htmlBody){
     if(!error){
-      var $ = cheerio.load(html);
-
+      var $ = cheerio.load(htmlBody);
       var title, length, posterURL, miniPosterURL, date1, date2, date3,
       date4, date5, date6, date7,time1, time2, time3, time4, time5, time6, time7;
-
       var movies = [];
 
       $('.movie-sched-outer').each(function() {
         // Below fixes the problem of inlcuding movie length and just get the title
         // of movie, FYI gets the text node within the div excluding text in <p>
-        var temp = $(this).find('.movie-title').first().contents().filter(function() {
+        var movieTitleString = $(this).find('.movie-title').first().contents().filter(function() {
           return this.nodeType === 3;
         });
-        console.log('Title: ' + temp.prevObject.eq(0).text());
-        title = temp.prevObject.eq(0).text();
-
+        title = movieTitleString.prevObject.eq(0).text();
         $(this).find('.movie-title').each(function(){
           length = $(this).children().first().text();
         });
-
         $(this).find('.movie-poster').each(function() {
           posterURL = $(this).find('a').attr('href');
-          console.log('Poster: ' + posterURL);
-          
         });
         $(this).find('.movie-poster').each(function() {
           miniPosterURL = $(this).find('img').attr('src');
-          console.log('Poster: ' + miniPosterURL);
-          
         });
         $(this).find('.table-col-1').each(function() {
           date1 = $(this).find('.textwidget').text();
           time1 = $(this).find('.table-contents').text().trim();
-          console.log('Date: ' + date1);
-          console.log('Time: ' + time1);
-          
         });
         $(this).find('.table-col-2').each(function() {
           date2 = $(this).find('.textwidget').text();
           time2 = $(this).find('.table-contents').text().trim();
-          console.log('Date: ' + date2);
-          console.log('Time: ' + time2);
-          
-          
         });
         $(this).find('.table-col-3').each(function() {
           date3 = $(this).find('.textwidget').text();
           time3 = $(this).find('.table-contents').text().trim();
-          console.log('Date: ' + date3);
-          console.log('Time: ' + time3);
-          
-          
         });
         $(this).find('.table-col-4').each(function() {
           date4 = $(this).find('.textwidget').text();
           time4 = $(this).find('.table-contents').text().trim();
-          console.log('Date: ' + date4);
-          console.log('Time: ' + time4);
-          
-          
         });
         $(this).find('.table-col-5').each(function() {
           date5 = $(this).find('.textwidget').text();
           time5 = $(this).find('.table-contents').text().trim();
-          console.log('Date: ' + date5);
-          console.log('Time: ' + time5);
-          
-          
         });
         $(this).find('.table-col-6').each(function() {
           date6 = $(this).find('.textwidget').text();
           time6 = $(this).find('.table-contents').text().trim();
-          console.log('Date: ' + date6);
-          console.log('Time: ' + time6);
-          
-          
         });
         $(this).find('.table-col-7').each(function() {
           date7 = $(this).find('.textwidget').text();
           time7 = $(this).find('.table-contents').text().trim();
-          console.log('Date: ' + date7);
-          console.log('Time: ' + time7);
-          
-          
         });
 
         // TODO: Need to change the formt of dates into something standard
@@ -121,11 +82,10 @@ app.get('/timesquare', function(req, res){
           date7 : date7,
           time7 : time7.replace(/(\r\n|\n|\r)/gm,' ')
         };
-
         movies.push(json);
       });
       
-      myRootRef.set(movies, function () {
+      firebaseRootRef.set(movies, function () {
         console.log('updated firebase');
       });
       
